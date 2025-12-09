@@ -1,17 +1,19 @@
 package pioneer.opmodes.other
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import pioneer.Bot
 import pioneer.decode.Obelisk
 import pioneer.general.AllianceColor
-import pioneer.hardware.Camera
 import pioneer.opmodes.BaseOpMode
+import pioneer.vision.AprilTag
 
+@Disabled
 @TeleOp(name = "Obelisk Test")
 class ObeliskTest : BaseOpMode() {
     private var alliance = AllianceColor.BLUE
 
-    private val processor = Camera.createAprilTagProcessor()
+    private val processor = AprilTag(draw = true).processor
 
     override fun onInit() {
         bot = Bot.builder().build()
@@ -67,7 +69,7 @@ class ObeliskTest : BaseOpMode() {
 
         if (motif != null && motif.isValid()) {
             telemetry.addData("Motif Tag", motif.aprilTagId)
-            telemetry.addData("Current Artifact", motif.currentArtifact()?.toString() ?: "None")
+            telemetry.addData("Current Artifact", motif.currentArtifact?.toString() ?: "None")
             telemetry.addData("Position", "${motif.getCurrentIndex() + 1} of 3")
             telemetry.addData("Pattern", getPatternString(motif))
         } else {
