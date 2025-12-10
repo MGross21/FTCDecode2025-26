@@ -1,54 +1,109 @@
 package pioneer.helpers
 
-import kotlin.math.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 
 class ModelPredictiveControl(
-    private val timeHorizon: Double,
-    private val timeStep: Double,
-    private val maxVelocity: Double,
-    private val maxAcceleration: Double
+    private val horizon: Int = 10,
+    private val maxAccel: Double = 50.0,
+    private val posWeight: Double = 1.0,
+    private val controlWeight: Double = 0.01,
+    private val iterations: Int = 3,
 ) {
-    data class State(val x: Double, val y: Double, val heading: Double, val vx: Double, val vy: Double, val omega: Double)
-    data class Control(val ax: Double, val ay: Double, val alpha: Double)
+    private val threadPool = Executors.newFixedThreadPool(6)
 
-    fun optimizePath(initialState: State, targetState: State): List<Control> {
-        val controls = mutableListOf<Control>()
-        var currentState = initialState
+    fun update(
+        current: Pose,
+        target: Pose,
+        dt: Double,
+    ): Pose {
+        val initialControl = computeInitialControl(current, target, dt)
+        return optimize(current, target, initialControl, dt)
+    }
 
-        for (t in 0 until (timeHorizon / timeStep).toInt()) {
-            val control = calculateOptimalControl(currentState, targetState)
-            controls.add(control)
-            currentState = applyControl(currentState, control, timeStep)
+    fun shutdown() = threadPool.shutdown()
+
+    private fun optimize(
+        current: Pose,
+        target: Pose,
+        initControl: Pose,
+        dt: Double,
+    ): Pose {
+        var best = initControl
+        var bestCost = evaluateCost(current, target, best, dt)
+
+        repeat(iterations) { iter ->
+            val delta = maxAccel * 0.2 / (1 + iter * 0.5)
+
+            val perturbations = listOf(
+                Callable { Pair(best.copy(ax = best.ax + delta), 0) },
+                Callable { Pair(best.copy(ax = best.ax - delta), 1) },
+                Callable { Pair(best.copy(ay = best.ay + delta), 2) },
+                Callable { Pair(best.copy(ay = best.ay - delta), 3) },
+                Callable { Pair(best.copy(alpha = best.alpha + delta), 4) },
+                Callable { Pair(best.copy(alpha = best.alpha - delta), 5) },
+            )
+
+            val futures = threadPool.invokeAll(perturbations)
+            
+            futures.forEach { future ->
+                val (control, _) = future.get()
+                val clamped = clampControl(control)
+                val c = evaluateCost(current, target, clamped, dt)
+                if (c < bestCost) {
+                    best = clamped
+                    bestCost = c
+                }
+            }
         }
 
-        return controls
+        return best
     }
 
-    private fun calculateOptimalControl(current: State, target: State): Control {
-        val dx = target.x - current.x
-        val dy = target.y - current.y
-        val dHeading = target.heading - current.heading
-
-        val desiredVx = dx / timeStep
-        val desiredVy = dy / timeStep
-        val desiredOmega = dHeading / timeStep
-
-        val ax = (desiredVx - current.vx).coerceIn(-maxAcceleration, maxAcceleration)
-        val ay = (desiredVy - current.vy).coerceIn(-maxAcceleration, maxAcceleration)
-        val alpha = (desiredOmega - current.omega).coerceIn(-maxAcceleration, maxAcceleration)
-
-        return Control(ax, ay, alpha)
+    private fun computeInitialControl(current: Pose, target: Pose, dt: Double): Pose {
+        val dt2 = dt * dt
+        val dTheta = wrapAngle(target.theta - current.theta)
+        val ax = ((target.x - current.x - current.vx * dt) / dt2).coerceIn(-maxAccel, maxAccel)
+        val ay = ((target.y - current.y - current.vy * dt) / dt2).coerceIn(-maxAccel, maxAccel)
+        val alpha = ((dTheta - current.omega * dt) / dt2).coerceIn(-maxAccel, maxAccel)
+        return Pose(ax = ax, ay = ay, alpha = alpha)
     }
 
-    private fun applyControl(state: State, control: Control, dt: Double): State {
-        val newVx = (state.vx + control.ax * dt).coerceIn(-maxVelocity, maxVelocity)
-        val newVy = (state.vy + control.ay * dt).coerceIn(-maxVelocity, maxVelocity)
-        val newOmega = (state.omega + control.alpha * dt).coerceIn(-maxVelocity, maxVelocity)
+    private fun evaluateCost(current: Pose, target: Pose, control: Pose, dt: Double): Double {
+        var pose = current
+        var sum = 0.0
 
-        val newX = state.x + newVx * dt
-        val newY = state.y + newVy * dt
-        val newHeading = state.heading + newOmega * dt
+        repeat(horizon) {
+            pose = pose.copy(
+                vx = pose.vx + control.ax * dt,
+                vy = pose.vy + control.ay * dt,
+                omega = pose.omega + control.alpha * dt,
+                ax = control.ax,
+                ay = control.ay,
+                alpha = control.alpha,
+            ).integrate(dt)
 
-        return State(newX, newY, newHeading, newVx, newVy, newOmega)
+            val posError = pose.distanceTo(target)
+            val angError = abs(wrapAngle(pose.theta - target.theta))
+            val controlEffort = control.ax * control.ax + control.ay * control.ay + control.alpha * control.alpha
+
+            sum += posWeight * (posError + angError) + controlWeight * controlEffort
+        }
+
+        return sum
     }
+
+    private fun clampControl(control: Pose): Pose =
+        control.copy(
+            ax = control.ax.coerceIn(-maxAccel, maxAccel),
+            ay = control.ay.coerceIn(-maxAccel, maxAccel),
+            alpha = control.alpha.coerceIn(-maxAccel, maxAccel),
+        )
+
+    private fun wrapAngle(angle: Double): Double = atan2(sin(angle), cos(angle))
 }
+
