@@ -2,6 +2,7 @@ package pioneer.opmodes
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.hardware.lynx.LynxModule
 import pioneer.Bot
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.Chrono
@@ -30,11 +31,19 @@ abstract class BaseOpMode : OpMode() {
         get() = getRuntime()
 
     final override fun init() {
+        // Manual bulk read for all hubs
+        hardwareMap.getAll(LynxModule::class.java).forEach { module ->
+            module.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL)
+        }
+
         onInit() // Call user-defined init method
+
         bot.initAll() // Initialize bot hardware
+
         if (!::bot.isInitialized) {
             throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
         }
+        
         updateTelemetry()
     }
 
@@ -53,6 +62,11 @@ abstract class BaseOpMode : OpMode() {
 
         // Automatically handle telemetry updates
         updateTelemetry()
+
+        // Clear bulk cache
+        hardwareMap.getAll(LynxModule::class.java).forEach { module ->
+            module.clearBulkCache()
+        }
     }
 
     final override fun stop() {
