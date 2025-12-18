@@ -1,13 +1,13 @@
 package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
 import pioneer.decode.Artifact
 import pioneer.helpers.Chrono
 import pioneer.helpers.PIDController
+import pioneer.hardware.cache.CachedMotorEx
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sign
@@ -47,7 +47,7 @@ class Spindexer(
     private val currentUnit: CurrentUnit = CurrentUnit.MILLIAMPS,
 ) : HardwareComponent {
 
-    private lateinit var motor: DcMotorEx
+    private lateinit var motor: CachedMotorEx
     private lateinit var intakeSensor: RevColorSensor
 
     // Motor positions in radians
@@ -191,7 +191,7 @@ class Spindexer(
     override fun init() {
         checkingForNewArtifacts = true
         motor =
-            hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+            CachedMotorEx(hardwareMap, motorName).apply {
                 mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
                 mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
                 setCurrentAlert(overCurrentThreshold, currentUnit)

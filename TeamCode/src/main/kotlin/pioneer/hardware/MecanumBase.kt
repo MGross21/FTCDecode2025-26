@@ -1,11 +1,11 @@
 package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.Constants
 import pioneer.helpers.Pose
+import pioneer.hardware.cache.CachedMotorEx
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -13,12 +13,12 @@ class MecanumBase(
     private val hardwareMap: HardwareMap,
     private val motorConfig: Map<String, DcMotorSimple.Direction> = Constants.Drive.MOTOR_CONFIG,
 ) : HardwareComponent {
-    private lateinit var motors: Map<String, DcMotorEx>
+    private lateinit var motors: Map<String, CachedMotorEx>
 
     override fun init() {
         motors =
             motorConfig.mapValues { (name, direction) ->
-                hardwareMap.get(DcMotorEx::class.java, name).apply {
+                CachedMotorEx(hardwareMap, name).apply {
                     configureMotor(direction)
                 }
             }
@@ -29,7 +29,7 @@ class MecanumBase(
     private val rightFront get() = motors.getValue(Constants.HardwareNames.DRIVE_RIGHT_FRONT)
     private val rightBack get() = motors.getValue(Constants.HardwareNames.DRIVE_RIGHT_BACK)
 
-    private fun DcMotorEx.configureMotor(direction: DcMotorSimple.Direction) {
+    private fun CachedMotorEx.configureMotor(direction: DcMotorSimple.Direction) {
         mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         mode = DcMotor.RunMode.RUN_USING_ENCODER
         zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE

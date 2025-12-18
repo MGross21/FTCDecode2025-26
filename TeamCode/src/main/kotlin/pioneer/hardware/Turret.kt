@@ -1,13 +1,13 @@
 package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.Const
 import pioneer.Constants
 import pioneer.helpers.MathUtils
 import pioneer.helpers.Pose
+import pioneer.hardware.cache.CachedMotorEx
 import kotlin.math.PI
 import kotlin.math.abs
 
@@ -16,7 +16,7 @@ class Turret(
     private val motorName: String = Constants.HardwareNames.TURRET_MOTOR,
     private val motorRange: Pair<Double, Double> = -3 * PI / 2 to PI / 2,
 ) : HardwareComponent {
-    private lateinit var turret: DcMotorEx
+    private lateinit var turret: CachedMotorEx
 
     private val ticksPerRadian: Double = Constants.Turret.TICKS_PER_REV / (2 * PI)
 
@@ -48,7 +48,7 @@ class Turret(
 
     override fun init() {
         turret =
-            hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+            CachedMotorEx(hardwareMap, motorName).apply {
                 mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
                 direction = DcMotorSimple.Direction.FORWARD

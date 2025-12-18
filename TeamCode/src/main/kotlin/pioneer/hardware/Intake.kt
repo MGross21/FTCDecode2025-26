@@ -1,16 +1,16 @@
 package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import pioneer.Constants
+import pioneer.hardware.cache.CachedMotorEx
 
 class Intake(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.INTAKE_MOTOR,
 ) : HardwareComponent {
-    private lateinit var intake: DcMotorEx
+    private lateinit var intake: CachedMotorEx
 
     var power
         get() = intake.power
@@ -22,7 +22,7 @@ class Intake(
 
     override fun init() {
         intake =
-            hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+            CachedMotorEx(hardwareMap, motorName).apply {
                 mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
                 direction = DcMotorSimple.Direction.FORWARD

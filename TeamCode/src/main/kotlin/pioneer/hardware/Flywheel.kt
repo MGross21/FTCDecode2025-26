@@ -1,7 +1,6 @@
 package pioneer.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.PIDFCoefficients
@@ -10,6 +9,7 @@ import pioneer.Constants
 import pioneer.decode.GoalTag
 import pioneer.helpers.FileLogger
 import pioneer.helpers.Pose
+import pioneer.hardware.cache.CachedMotorEx
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
@@ -20,9 +20,9 @@ class Flywheel(
     private val hardwareMap: HardwareMap,
     private val motorName: String = Constants.HardwareNames.FLYWHEEL,
 ) : HardwareComponent {
-    private lateinit var flywheel: DcMotorEx
+    private lateinit var flywheel: CachedMotorEx
 
-    val motor: DcMotorEx
+    val motor: CachedMotorEx
         get() = flywheel
 
     var velocity
@@ -36,7 +36,7 @@ class Flywheel(
 
     override fun init() {
         flywheel =
-            hardwareMap.get(DcMotorEx::class.java, motorName).apply {
+            CachedMotorEx(hardwareMap, motorName).apply {
                 mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
                 mode = DcMotor.RunMode.RUN_USING_ENCODER
                 zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
