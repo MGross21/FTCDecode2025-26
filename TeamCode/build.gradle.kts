@@ -55,7 +55,7 @@ android {
         jvmTarget = "1.8"
     }
 
-    packagingOptions {
+    packaging {
         jniLibs {
             useLegacyPackaging = true
         }

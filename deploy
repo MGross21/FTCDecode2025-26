@@ -1,42 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e  # Exit on any error
+set -e
 
-WIFI_NAME="${1:-FTC-B1Mb}"
-FTC_IP="${2:-192.168.43.1:5555}"
+FTC_IP="${1:-192.168.43.1:5555}"
 MODULE_NAME="TeamCode"
 APK_PATH="./$MODULE_NAME/build/outputs/apk/release/$MODULE_NAME-release.apk"
 
 echo "=== Pioneer Quick Build & Deploy ==="
 echo ""
 
-# Connect to WiFi if nmcli is available
-if command -v nmcli >/dev/null 2>&1; then
-    echo "Connecting to WiFi: $WIFI_NAME..."
-    nmcli device wifi connect "$WIFI_NAME"
-fi
-
-# Build release APK
 echo "Building release APK..."
-./gradlew assembleRelease --quiet
+./gradlew assembleRelease --quiet --configuration-cache --parallel
 
-# Connect to device
 echo "Connecting to $FTC_IP..."
-if ! adb connect "$FTC_IP"; then
-    echo "Warning: Could not connect to $FTC_IP, checking for USB devices..."
-fi
+timeout 2s adb connect "$FTC_IP" &>/dev/null || echo "Info: Could not connect via WiFi, checking for USB devices..."
 
-# Check for connected devices
-if ! adb devices | grep -q "device$"; then
-    echo "Error: No devices connected. Please connect via USB or ensure WiFi connection."
+DEVICE_COUNT=$(adb devices | grep -c "device$" || echo "0")
+
+if [ "$DEVICE_COUNT" -eq 0 ]; then
+    echo ""
+    echo "Error: No devices connected."
+    echo ""
+    echo "Please ensure one of the following:"
+    echo "  1. Device is connected via USB with USB debugging enabled"
+    echo "  2. Device is connected via WiFi Direct to $FTC_IP"
+    echo "     (Use your OS network settings to connect to the FTC WiFi network)"
+    echo ""
     exit 1
 fi
 
 echo "Device connected successfully"
 
-# Install APK
 echo "Installing $APK_PATH..."
-adb install -r "$APK_PATH"
+adb install -r -t -d "$APK_PATH"
 
 echo ""
 echo "=== Deployment Complete ==="
