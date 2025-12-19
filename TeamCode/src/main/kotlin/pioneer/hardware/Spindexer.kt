@@ -5,9 +5,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import pioneer.Constants
 import pioneer.decode.Artifact
+import pioneer.hardware.cache.CachedMotorEx
 import pioneer.helpers.Chrono
 import pioneer.helpers.PIDController
-import pioneer.hardware.cache.CachedMotorEx
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sign
@@ -46,7 +46,6 @@ class Spindexer(
     private val overCurrentThreshold: Double = 5000.0, // TODO: Find appropriate threshold
     private val currentUnit: CurrentUnit = CurrentUnit.MILLIAMPS,
 ) : HardwareComponent {
-
     private lateinit var motor: CachedMotorEx
     private lateinit var intakeSensor: RevColorSensor
 
@@ -76,7 +75,7 @@ class Spindexer(
             value.forEachIndexed { index, artifact ->
                 _artifacts[index] = artifact
             }
-    }
+        }
 
     // Current motor state
     var motorState: MotorPosition = MotorPosition.INTAKE_1

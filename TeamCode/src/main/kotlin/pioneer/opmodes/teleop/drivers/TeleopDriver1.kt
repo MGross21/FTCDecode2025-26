@@ -7,10 +7,10 @@ import pioneer.general.AllianceColor
 import pioneer.helpers.Pose
 import pioneer.helpers.Toggle
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.abs
 
 class TeleopDriver1(
     var gamepad: Gamepad,

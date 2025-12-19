@@ -1,31 +1,30 @@
 package pioneer.hardware
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.IMU as QualcommIMU
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot
-
+import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+import com.qualcomm.robotcore.hardware.IMU as QualcommIMU
 
 class IMU(
     private val hardwareMap: HardwareMap,
     private val imuName: String = "imu",
-    private val unit: AngleUnit = AngleUnit.RADIANS
+    private val unit: AngleUnit = AngleUnit.RADIANS,
 ) : HardwareComponent {
-
     private lateinit var imu: QualcommIMU
 
     override fun init() {
-        imu = hardwareMap.get(QualcommIMU::class.java, imuName).apply {
-            initialize(
-                QualcommIMU.Parameters(
-                    RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                        RevHubOrientationOnRobot.UsbFacingDirection.UP
-                    )
+        imu =
+            hardwareMap.get(QualcommIMU::class.java, imuName).apply {
+                initialize(
+                    QualcommIMU.Parameters(
+                        RevHubOrientationOnRobot(
+                            RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                            RevHubOrientationOnRobot.UsbFacingDirection.UP,
+                        ),
+                    ),
                 )
-            )
-            resetYaw()
-        }
+                resetYaw()
+            }
     }
 
     fun resetYaw() {
@@ -40,8 +39,6 @@ class IMU(
     val vpitch get() = imu.getRobotAngularVelocity(unit).xRotationRate
     val vroll get() = imu.getRobotAngularVelocity(unit).yRotationRate
 
-    override fun toString(): String {
-        return "Yaw: $yaw, Pitch: $pitch, Roll: $roll, Yaw Velocity: $vyaw, Pitch Velocity: $vpitch, Roll Velocity: $vroll"
-    }
-
+    override fun toString(): String =
+        "Yaw: $yaw, Pitch: $pitch, Roll: $roll, Yaw Velocity: $vyaw, Pitch Velocity: $vpitch, Roll Velocity: $vroll"
 }

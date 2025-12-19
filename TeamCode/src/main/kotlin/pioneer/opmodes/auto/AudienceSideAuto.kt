@@ -153,7 +153,7 @@ class AudienceSideAuto : BaseOpMode() {
 
     private fun state_stop() {
         if (resetTimer.seconds() > 2.5) {
-            bot.mecanumBase?.setDriveVA(Pose(vy=20.0))
+            bot.mecanumBase?.setDriveVA(Pose(vy = 20.0))
             bot.flywheel?.velocity = 0.0
             bot.spindexer?.moveToNextOpenIntake()
             bot.turret?.gotoAngle(0.0)

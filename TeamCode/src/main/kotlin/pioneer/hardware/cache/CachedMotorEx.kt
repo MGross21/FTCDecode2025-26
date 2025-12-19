@@ -2,7 +2,6 @@ package pioneer.hardware.cache
 
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import kotlin.properties.Delegates
 
 /**
  * A drop-in replacement for DcMotorEx that intercepts method calls to add caching for power and velocity.
@@ -11,7 +10,6 @@ class CachedMotorEx(
     hardwareMap: HardwareMap,
     motorName: String,
 ) : DcMotorEx by hardwareMap.get(DcMotorEx::class.java, motorName) {
-
     // Cached values for power and velocity
     private var cachedPower: Double = 0.0
     private var cachedVelocity: Double = 0.0

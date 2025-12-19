@@ -1,8 +1,8 @@
 package pioneer.opmodes
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.hardware.lynx.LynxModule
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import pioneer.Bot
 import pioneer.hardware.MecanumBase
 import pioneer.helpers.Chrono
@@ -43,7 +43,7 @@ abstract class BaseOpMode : OpMode() {
         if (!::bot.isInitialized) {
             throw IllegalStateException("Bot not initialized. Please set 'bot' in onInit().")
         }
-        
+
         updateTelemetry()
     }
 

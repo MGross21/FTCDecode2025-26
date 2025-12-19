@@ -10,7 +10,6 @@ import java.time.Year
 // please think carefully as to whether such customizations are really necessary
 // before doing so.
 
-
 // Custom definitions may go here
 
 // ktlint configuration - plugins block must come before apply statements
@@ -29,11 +28,11 @@ dokka {
     dokkaPublications.html {
         // Customize colors and styling
         moduleName.set("Pioneer Robotics Documentation")
-        
+
         pluginsConfiguration.html {
             // Custom CSS for colors
             // customStyleSheets.from("dokka-styles.css")
-            
+
             // Footer text
             footerMessage.set("© ${Year.now().value} Pioneer Robotics")
         }
@@ -42,8 +41,8 @@ dokka {
 
 ktlint {
     android = true
-    ignoreFailures = true  // Allow build to succeed, but still show warnings
-    
+    ignoreFailures = true // Allow build to succeed, but still show warnings
+
     // Disable ktlint check tasks to prevent build failures
     filter {
         exclude("**/build/**")
@@ -80,9 +79,9 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-//kotlin {
+// kotlin {
 //    jvmToolchain(8)
-//}
+// }
 
 tasks.register("dokkaHtmlMultiModule") {
     dependsOn(":TeamCode:dokkaGeneratePublicationHtml")

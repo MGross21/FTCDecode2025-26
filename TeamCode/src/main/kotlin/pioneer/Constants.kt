@@ -173,6 +173,7 @@ object Constants {
         @JvmField var KD = 0.04
 
         @JvmField var KS_START = 0.05
+
         @JvmField var KS_STEP = 0.01
 
         @JvmField var MAX_POWER_RATE = 5.0
