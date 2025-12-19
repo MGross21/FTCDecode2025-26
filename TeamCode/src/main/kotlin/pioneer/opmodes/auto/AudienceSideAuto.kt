@@ -73,7 +73,7 @@ class AudienceSideAuto : BaseOpMode() {
             State.INIT -> {
                 bot.spindexer?.apply {
                     checkingForNewArtifacts = false
-                    setArtifacts(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
+                    artifacts = arrayOf(Artifact.GREEN, Artifact.PURPLE, Artifact.PURPLE)
                     moveToNextOuttake(motifOrder.currentArtifact)
                 }
                 P = Points(bot.allianceColor)

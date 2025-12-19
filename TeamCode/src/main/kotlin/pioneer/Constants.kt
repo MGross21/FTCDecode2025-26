@@ -189,8 +189,8 @@ object Constants {
     }
 
     object Turret {
-        const val TICKS_PER_REV = 384.5 * 3
-        const val HEIGHT = 30.0
+        const val TICKS_PER_REV = 384.5 * 3.0
+        const val HEIGHT_CM = 12.0 * 2.54
         const val THETA = 0.93
         const val ANGLE_TOLERANCE_RADIANS = 0.075
         const val LAUNCH_TIME = 0.125
