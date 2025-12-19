@@ -55,12 +55,15 @@ class Follower(
         // Ensure path and motion profile are set
         val path = this.path ?: return false
         val motionProfile = this.motionProfile ?: return false
+        val headingProfile = this.headingProfile ?: return false
 
         val targetPose = path.endPose
         val withinPositionTolerance = localizer.pose.distanceTo(targetPose) < Constants.Follower.POSITION_THRESHOLD
-        val withinThetaTolerance = abs(localizer.pose.theta - targetPose.theta) < Constants.Follower.ROTATION_THRESHOLD
-        val isTimeUp = elapsedTime.seconds() > motionProfile.duration()
-        return withinThetaTolerance && isTimeUp // Could add position tolerance here
+        val headingError = MathUtils.normalizeRadians(localizer.pose.theta - targetPose.theta)
+        val withinThetaTolerance = abs(headingError) < Constants.Follower.ROTATION_THRESHOLD
+        val totalTime = max(motionProfile.duration(), headingProfile.duration())
+        val isTimeUp = elapsedTime.seconds() >= totalTime
+        return withinPositionTolerance && withinThetaTolerance && isTimeUp
     }
 
     val targetState: MotionState?
@@ -82,11 +85,12 @@ class Follower(
         val headingProfile = this.headingProfile ?: return
 
         // Get the time since the follower started
-        val t = elapsedTime.seconds().coerceAtMost(motionProfile.duration())
+        val elapsed = elapsedTime.seconds()
+        val t = elapsed.coerceAtMost(max(motionProfile.duration(), headingProfile.duration()))
         // Get the target state from the motion profile
-        val targetState = motionProfile[t]
+        val targetState = motionProfile[t.coerceAtMost(motionProfile.duration())]
 
-        val headingTargetRaw = headingProfile[t]
+        val headingTargetRaw = headingProfile[t.coerceAtMost(headingProfile.duration())]
         val startTheta = poseAtStartTheta
 
         val headingTarget =
@@ -101,10 +105,14 @@ class Follower(
 
         // Get the target point, first derivative (tangent), and second derivative (acceleration) from the path
         val pathTargetPose = path.getPose(pathT)
+        val derivativeMagnitude = sqrt(pathTargetPose.vx * pathTargetPose.vx + pathTargetPose.vy * pathTargetPose.vy)
         val tangent =
-            Pose(pathTargetPose.vx, pathTargetPose.vy) /
-                sqrt(pathTargetPose.vx * pathTargetPose.vx + pathTargetPose.vy * pathTargetPose.vy)
-        val curvature = path.getCurvature(pathT)
+            if (derivativeMagnitude < 1e-6) {
+                Pose()
+            } else {
+                Pose(pathTargetPose.vx, pathTargetPose.vy) / derivativeMagnitude
+            }
+        val curvature = path.getCurvature(pathT).let { if (it.isNaN()) 0.0 else it }
 
         // Calculate 2D target velocity and acceleration based on path derivatives
         val targetPose =

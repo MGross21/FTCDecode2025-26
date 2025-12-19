@@ -26,13 +26,19 @@ class LinearPath(
         return Pose(x, y)
     }
 
-    override fun getPose(t: Double): Pose =
-        Pose(
-            x = startPose.x + (endPose.x - startPose.x) * t,
-            y = startPose.y + (endPose.y - startPose.y) * t,
-            vx = (endPose.x - startPose.x) / getLength(),
-            vy = (endPose.y - startPose.y) / getLength(),
-        )
+    override fun getPose(t: Double): Pose {
+        val length = getLength()
+        return if (length < 1e-9) {
+            Pose(startPose.x, startPose.y)
+        } else {
+            Pose(
+                x = startPose.x + (endPose.x - startPose.x) * t,
+                y = startPose.y + (endPose.y - startPose.y) * t,
+                vx = (endPose.x - startPose.x) / length,
+                vy = (endPose.y - startPose.y) / length,
+            )
+        }
+    }
 
     override fun getCurvature(t: Double): Double {
         return 0.0 // Linear paths have zero curvature
